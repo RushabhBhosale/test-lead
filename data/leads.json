@@ -1,0 +1,31 @@
+[
+  {
+    "name": "Aarav Sharma",
+    "email": "aarav.sharma@example.com",
+    "phone": "+91 98765 43210",
+    "status": "New",
+    "id": "1",
+    "property": "Cedar Park Villa"
+  },
+  {
+    "name": "Priya Mehta",
+    "email": "priya.mehta@example.com",
+    "phone": "+91 98234 56789",
+    "status": "Contacted",
+    "id": "2"
+  },
+  {
+    "name": "Rohan Patel",
+    "email": "rohan.patel@example.com",
+    "phone": "+91 97654 32108",
+    "status": "Converted",
+    "id": "3"
+  },
+  {
+    "id": "12a56f55-75e8-4d3a-88ea-ee100a0cfdd6",
+    "name": "John Doe",
+    "email": "test@email.com",
+    "phone": "9189939333",
+    "status": "Contacted"
+  }
+]

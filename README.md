@@ -18,14 +18,13 @@ npm run build
 npm start
 ```
 
-The Next.js backend saves leads in `data/leads.json`. The file is created when a lead is added or updated. Sample leads are shown before the first save. Property images load from Unsplash.
+## Lead storage
 
-## API
+Leads are saved in browser localStorage under `homestead-leads`. Sample leads are saved only when this key is missing on the first visit. Adding leads and changing their status or assigned property persists after refresh. An empty saved list stays empty.
 
-- `GET /api/leads` returns all leads.
-- `POST /api/leads` adds a lead with name, email, phone, status, and an optional property.
-- `PUT /api/leads` updates a lead using its id and a status or property. An empty property clears the selection.
+Storage is read after the page mounts to avoid hydration errors. Invalid JSON or invalid lead records are reset to an empty list with a message. Missing optional properties are supported. If storage is blocked or full, the app continues for the current session and shows that changes could not be saved.
 
-Status must be New, Contacted, or Converted. Contact fields and status are validated on the server. Email format is validated by the frontend; the server checks that email is provided and no longer than 120 characters.
+Data belongs to this browser profile and website origin. It is not shared between users, browsers, devices, or deployment URLs. Clearing browser data removes leads and starts a new first visit. Private browsing may discard data when the session ends. Multiple open tabs do not sync automatically. Browser storage is not a secure database or a backup for sensitive contact information.
 
-Run this demo locally or on a single Node.js server with writable, persistent storage. JSON file storage is not suitable for serverless hosting or multiple server instances.
+No API, database, or server filesystem is used for leads, so this demo can run on Vercel. Existing server-side JSON leads are not migrated automatically. Property images load from Unsplash.
+

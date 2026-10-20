@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { parseLeads, sampleLeads, storageKey } from '../lib/lead-storage';
 
 const properties = [
   { name: 'The Palm Residence', location: 'Whitefield, Bengaluru', price: '₹85 lakh', type: 'Apartment', beds: 2, baths: 2, area: '1,250', image: 'photo-1600585154340-be6161a56a0c' },
@@ -15,58 +15,69 @@ export default function Home() {
   const [message, setMessage] = useState('');
 
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    async function loadLeads() {
-      try {
-        const response = await axios.get('/api/leads');
-        setLeads(response.data);
-      } catch (error) {
-        setMessage(error.response?.data?.error || 'Could not load leads. Please refresh to try again.');
-      } finally {
-        setLoading(false);
+    try {
+      const stored = localStorage.getItem(storageKey);
+      if (stored === null) {
+        setLeads(sampleLeads);
+        localStorage.setItem(storageKey, JSON.stringify(sampleLeads));
+      } else {
+        try {
+          setLeads(parseLeads(stored, properties.map(property => property.name)));
+        } catch {
+          setMessage('Saved leads were invalid and have been cleared. You can add new leads.');
+          localStorage.setItem(storageKey, '[]');
+        }
       }
+    } catch {
+      setMessage('Browser storage is unavailable. Changes will only last for this session.');
+    } finally {
+      setLoading(false);
     }
-    loadLeads();
   }, []);
 
-  async function addLead(event) {
+  function saveLeads(updatedLeads) {
+    setLeads(updatedLeads);
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(updatedLeads));
+    } catch {
+      setMessage('Changes could not be saved in this browser. They will only last for this session.');
+    }
+  }
+
+  function addLead(event) {
     event.preventDefault();
     const form = event.currentTarget;
     const data = new FormData(form);
     const lead = {
+      id: crypto.randomUUID(),
       name: data.get('name').trim(),
       email: data.get('email').trim(),
       phone: data.get('phone').trim(),
       status: data.get('status'),
       property: data.get('property')
     };
-    setSaving(true);
-    setMessage('');
-    try {
-      const response = await axios.post('/api/leads', lead);
-      setLeads(current => [...current, response.data]);
-      form.reset();
-      setMessage('Lead added successfully.');
-    } catch (error) {
-      setMessage(error.response?.data?.error || 'Could not add lead. Please try again.');
-    } finally {
-      setSaving(false);
+    if (!lead.name) {
+      setMessage('Name is required.');
+      return;
     }
+    if (!lead.email) {
+      setMessage('Email is required.');
+      return;
+    }
+    if (!lead.phone) {
+      setMessage('Phone is required.');
+      return;
+    }
+    setMessage('Lead added successfully.');
+    saveLeads([...leads, lead]);
+    form.reset();
   }
 
-  async function updateLead(id, changes) {
-    setSaving(true);
+  function updateLead(id, changes) {
     setMessage('');
-    try {
-      const response = await axios.put('/api/leads', { id, ...changes });
-      setLeads(current => current.map(lead => lead.id === id ? response.data : lead));
-    } catch (error) {
-      setMessage(error.response?.data?.error || 'Could not update lead. Please try again.');
-    } finally {
-      setSaving(false);
-    }
+    saveLeads(leads.map(lead => lead.id === id ? { ...lead, ...changes } : lead));
   }
 
   return (
@@ -116,13 +127,13 @@ export default function Home() {
                       <td className="lead-name">{lead.name}</td>
                       <td><div>{lead.email}</div><div className="phone">{lead.phone}</div></td>
                       <td>
-                        <select className="property-select" value={lead.property || ''} disabled={saving} aria-label={`Property for ${lead.name}`} onChange={event => updateLead(lead.id, { property: event.target.value })}>
+                        <select className="property-select" value={lead.property || ''} disabled={loading} aria-label={`Property for ${lead.name}`} onChange={event => updateLead(lead.id, { property: event.target.value })}>
                           <option value="">Not specified</option>
                           {properties.map(property => <option key={property.name} value={property.name}>{property.name}</option>)}
                         </select>
                       </td>
                       <td>
-                        <select className={`status ${lead.status.toLowerCase()}`} value={lead.status} disabled={saving} aria-label={`Status for ${lead.name}`} onChange={event => updateLead(lead.id, { status: event.target.value })}>
+                        <select className={`status ${lead.status.toLowerCase()}`} value={lead.status} disabled={loading} aria-label={`Status for ${lead.name}`} onChange={event => updateLead(lead.id, { status: event.target.value })}>
                           {statuses.map(status => <option key={status}>{status}</option>)}
                         </select>
                       </td>
@@ -140,7 +151,7 @@ export default function Home() {
             {properties.map(property => <option key={property.name} value={property.name}>{property.name}</option>)}
           </select>
           <label htmlFor="status">Status</label><select id="status" name="status"><option>New</option><option>Contacted</option><option>Converted</option></select>
-          <button className="button" type="submit" disabled={saving || loading}>{saving ? 'Saving…' : 'Add lead'} <span>↗</span></button>
+          <button className="button" type="submit" disabled={loading}>Add lead <span>↗</span></button>
           <p id="form-message" role="status">{message}</p>
         </form>
       </div>

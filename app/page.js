@@ -124,15 +124,15 @@ export default function Home() {
                   {!loading && leads.length === 0 && <tr><td colSpan="4">No leads yet. Add your first lead using the form.</td></tr>}
                   {leads.map(lead => (
                     <tr key={lead.id}>
-                      <td className="lead-name">{lead.name}</td>
-                      <td><div>{lead.email}</div><div className="phone">{lead.phone}</div></td>
-                      <td>
+                      <td className="lead-name" data-label="Name">{lead.name}</td>
+                      <td className="lead-contact" data-label="Contact details"><div>{lead.email}</div><div className="phone">{lead.phone}</div></td>
+                      <td data-label="Property">
                         <select className="property-select" value={lead.property || ''} disabled={loading} aria-label={`Property for ${lead.name}`} onChange={event => updateLead(lead.id, { property: event.target.value })}>
                           <option value="">Not specified</option>
                           {properties.map(property => <option key={property.name} value={property.name}>{property.name}</option>)}
                         </select>
                       </td>
-                      <td>
+                      <td data-label="Status">
                         <select className={`status ${lead.status.toLowerCase()}`} value={lead.status} disabled={loading} aria-label={`Status for ${lead.name}`} onChange={event => updateLead(lead.id, { status: event.target.value })}>
                           {statuses.map(status => <option key={status}>{status}</option>)}
                         </select>
